@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIねがい星 - Vercel Edition</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+            text-align: center;
+        }
+
+        h1 {
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .star-icon {
+            font-size: 50px;
+            display: inline-block;
+            animation: spin 10s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .card {
+            background-color: #0f3460;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: left;
+            border: 1px solid #533483;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: none;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        button {
+            background-color: #e94560;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #c0354c;
+        }
+
+        button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            color: #aaa;
+            font-style: italic;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .result-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            text-align: right;
+        }
+
+        .label {
+            color: #888;
+            font-size: 0.85em;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .emphasis {
+            color: #ffd700;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="star-icon">★</div>
+        <h1>AIねがい星</h1>
+        <p>叶えます。でも、勘違いします。</p>
+
+        <div id="game-area">
+
+            <div id="persona-card" class="card">
+                <h3>現在の願い主</h3>
+                <div id="persona-loading" class="loading">
+                    次のチャレンジャーを探しています...
+                </div>
+                <div id="persona-content" class="hidden">
+                    <p><span class="label">属性</span><span id="p-attr"></span></p>
+                    <p><span class="label">性格</span><span id="p-personality"></span></p>
+                    <hr style="border-color: #533483; opacity: 0.5;">
+                    <p><span class="label">本来の願い（心の声）</span><span id="p-wish" class="emphasis"></span></p>
+                </div>
+            </div>
+
+            <div id="input-section" class="hidden">
+                <p>この願いを叶えるための「言葉」を入力してください。<br><small>※ねがい星に伝わるように工夫しましょう</small></p>
+                <input type="text" id="user-query" placeholder="例：美味しいご飯を出して！">
+                <button onclick="makeWish()" id="wish-btn">願いを送信</button>
+            </div>
+
+            <div id="result-card" class="card hidden">
+                <h3>結果</h3>
+                <div id="result-loading" class="loading">
+                    ねがい星が解釈中...<br>（現実をねじ曲げています）
+                </div>
+                <div id="result-content" class="hidden">
+                    <p><span class="label">あなたの命令</span><span id="r-query"></span></p>
+                    <p><span class="label">ねがい星の解釈</span><span id="r-interpretation" style="color:#ff9999;"></span></p>
+                    <p><span class="label">起こった現象</span><span id="r-outcome"></span></p>
+                    <hr style="border-color: #533483; opacity: 0.5;">
+                    <p><span class="label">本人の感想</span>「<span id="r-reaction"></span>」</p>
+                    <p class="result-score">満足度: <span id="r-score"></span>/100</p>
+
+                    <button onclick="initGame()" style="background-color: #533483; margin-top:15px;">次の人へ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPersona = {};
+
+        // Vercel上のAPIを呼び出す関数
+        async function callBackend(mode, payload = {}) {
+            try {
+                const response = await fetch('/api/wish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, ...payload })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Server Error');
+                }
+                return await response.json();
+            } catch (e) {
+                console.error(e);
+                alert("エラーが発生しました。通信環境を確認してください。");
+                return null;
+            }
+        }
+
+        // ゲーム初期化（ペルソナ生成）
+        async function initGame() {
+            // UIリセット
+            document.getElementById('persona-content').classList.add('hidden');
+            document.getElementById('persona-loading').classList.remove('hidden');
+            document.getElementById('input-section').classList.add('hidden');
+            document.getElementById('result-card').classList.add('hidden');
+            document.getElementById('user-query').value = '';
+
+            // API呼び出し
+            const data = await callBackend('persona');
+
+            if (data) {
+                currentPersona = data;
+                document.getElementById('p-attr').textContent = data.attribute;
+                document.getElementById('p-personality').textContent = data.personality;
+                document.getElementById('p-wish').textContent = data.true_wish;
+
+                document.getElementById('persona-loading').classList.add('hidden');
+                document.getElementById('persona-content').classList.remove('hidden');
+                document.getElementById('input-section').classList.remove('hidden');
+            }
+        }
+
+        // 願い事送信
+        async function makeWish() {
+            const query = document.getElementById('user-query').value;
+            if (!query) return;
+
+            document.getElementById('wish-btn').disabled = true;
+            document.getElementById('result-card').classList.remove('hidden');
+            document.getElementById('result-loading').classList.remove('hidden');
+            document.getElementById('result-content').classList.add('hidden');
+
+            // API呼び出し
+            const data = await callBackend('wish', {
+                query: query,
+                persona: currentPersona
+            });
+
+            if (data) {
+                document.getElementById('r-query').textContent = query;
+                document.getElementById('r-interpretation').textContent = data.interpretation;
+                document.getElementById('r-outcome').textContent = data.outcome;
+                document.getElementById('r-reaction').textContent = data.reaction;
+                document.getElementById('r-score').textContent = data.satisfaction_score;
+
+                document.getElementById('result-loading').classList.add('hidden');
+                document.getElementById('result-content').classList.remove('hidden');
+            }
+
+            document.getElementById('wish-btn').disabled = false;
+        }
+
+        // ページ読み込み時にスタート
+        initGame();
+    </script>
+
+</body>
+
+</html>
