@@ -20,11 +20,11 @@ export default async function handler(req, res) {
 
         // プロンプト定義
         if (mode === 'persona') {
-            promptText = `あなたはTRPGの優秀なゲームマスターです。以下の要件で、ユニークなキャラクターと「その人が今、切実に叶えたい願い」をランダムに生成してください。
+            promptText = `あなたはTRPGの優秀なゲームマスターです。以下の条件でランダムなキャラクターと、その人が今一番叶えたい願いを生成してください。
             ## 生成ルール
-            - 属性: 年齢、性別、職業、背景（例：52歳 男性 崖っぷちラーメン屋）。
-            - 性格: 特徴的に（例：極度の心配性）。
-            - 真の願い: 具体的で切実なもの。
+            - 属性: 年齢、性別、職業など（例：10歳男子小学生、40歳会社員男性）。
+            - 性格: （例：気が弱い、強欲、ロマンチスト）。
+            - 願い: 具体的で切実なもの。（例：テストで100点取りたい、フランス製の高級バッグが欲しい）
             ## 出力フォーマット (JSONのみ)
             { "attribute": "属性", "personality": "性格", "true_wish": "願い" }`;
         } else if (mode === 'wish') {
@@ -33,7 +33,12 @@ export default async function handler(req, res) {
             願い主: ${persona.attribute} (${persona.personality})
             本来の願望: ${persona.true_wish}
             
+            ユーザーの願いを、ダジャレ、同音異義語、言葉の勘違い、文脈の曲解を使って、
+            「字面は合っているが、望まれていない斜め上の形」で叶えてください。
+            
+            カオスで理不尽な結果ほど面白いです。
             命令をダジャレ(香水→洪水)、聞き間違い(切手を頂戴→切って頂戴)、文脈無視で曲解し、斜め上の結果を出してください。
+            
             ## 出力フォーマット (JSONのみ)
             { "interpretation": "解釈", "outcome": "結果(50文字程度)", "reaction": "感想", "satisfaction_score": 数値 }`;
         }
@@ -69,4 +74,5 @@ export default async function handler(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
 
