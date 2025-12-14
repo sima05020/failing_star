@@ -11,7 +11,7 @@ export default async function handler(req, res) {
         }
 
         // ▼▼▼ 修正ポイント：モデル名を「001」付きの正式名称に変更 ▼▼▼
-        const modelName = "gemini-1.5-flash-001"; 
+        const modelName = "gemini-2.5-flash"; 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
 
         const { mode, query, persona } = req.body;
@@ -69,3 +69,4 @@ export default async function handler(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
