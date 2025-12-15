@@ -222,21 +222,36 @@
             document.getElementById('result-loading').classList.remove('hidden');
             document.getElementById('result-content').classList.add('hidden');
 
-            // API呼び出し
-            const data = await callBackend('wish', {
-                query: query,
-                persona: currentPersona
-            });
+            try {
+                // Step 1: クエリから曲解と結果を生成（本来の願いは渡さない）
+                const wishData = await callBackend('wish', {
+                    query: query
+                });
 
-            if (data) {
+                if (!wishData) throw new Error('Wish failed');
+                const interpretation = wishData.interpretation;
+                const outcome = wishData.outcome;
+
+                // Step 2: 結果と本来の願いを比較して、感想と満足度を生成
+                const reactionData = await callBackend('reaction', {
+                    persona: currentPersona,
+                    outcome: outcome
+                });
+
+                if (!reactionData) throw new Error('Reaction failed');
+
+                // 画面に表示
                 document.getElementById('r-query').textContent = query;
-                document.getElementById('r-interpretation').textContent = data.interpretation;
-                document.getElementById('r-outcome').textContent = data.outcome;
-                document.getElementById('r-reaction').textContent = data.reaction;
-                document.getElementById('r-score').textContent = data.satisfaction_score;
+                document.getElementById('r-interpretation').textContent = interpretation;
+                document.getElementById('r-outcome').textContent = outcome;
+                document.getElementById('r-reaction').textContent = reactionData.reaction;
+                document.getElementById('r-score').textContent = reactionData.satisfaction_score;
 
                 document.getElementById('result-loading').classList.add('hidden');
                 document.getElementById('result-content').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error in wish process:', error);
+                alert('願い処理中にエラーが発生しました');
             }
 
             document.getElementById('wish-btn').disabled = false;
