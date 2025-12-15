@@ -223,16 +223,24 @@
             document.getElementById('result-content').classList.add('hidden');
 
             try {
-                // Step 1: クエリから曲解と結果を生成（本来の願いは渡さない）
-                const wishData = await callBackend('wish', {
+                // Step 1: クエリのみから曲解を生成（本来の願いは渡さない）
+                const interpretationData = await callBackend('interpretation', {
                     query: query
                 });
 
-                if (!wishData) throw new Error('Wish failed');
-                const interpretation = wishData.interpretation;
-                const outcome = wishData.outcome;
+                if (!interpretationData) throw new Error('Interpretation failed');
+                const interpretation = interpretationData.interpretation;
 
-                // Step 2: 結果と本来の願いを比較して、感想と満足度を生成
+                // Step 2: 曲解 + ペルソナ情報から、その人のキャラに合った現象を生成
+                const outcomeData = await callBackend('outcome', {
+                    interpretation: interpretation,
+                    persona: currentPersona
+                });
+
+                if (!outcomeData) throw new Error('Outcome failed');
+                const outcome = outcomeData.outcome;
+
+                // Step 3: 結果と本来の願いを比較して、感想と満足度を生成
                 const reactionData = await callBackend('reaction', {
                     persona: currentPersona,
                     outcome: outcome

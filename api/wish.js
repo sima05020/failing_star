@@ -14,7 +14,7 @@ export default async function handler(req, res) {
         const modelName = "gemini-2.5-flash";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
 
-        const { mode, query, persona, outcome } = req.body;
+        const { mode, query, persona, interpretation, outcome } = req.body;
 
         let promptText = "";
 
@@ -27,20 +27,35 @@ export default async function handler(req, res) {
             - 願い: 具体的で切実なもの。（例：テストで100点取りたい、フランス製の高級バッグが欲しい）
             ## 出力フォーマット (JSONのみ)
             { "attribute": "属性", "personality": "性格", "true_wish": "願い" }`;
-        } else if (mode === 'wish') {
-            // ★重要★ 本来の願いは渡さない！クエリのみから曲解と結果を生成
+        } else if (mode === 'interpretation') {
+            // ★重要★ 本来の願いは渡さない！クエリのみから曲解させる
             promptText = `あなたはドラえもんのひみつ道具「ねがい星」です。願い主の声を聞き間違えたり、言葉を曲解したりする天才です。
             
             願い主の命令: "${query}"
             
             この命令に対して、ダジャレ、同音異義語、言葉の勘違い、文脈の曲解を使って、
-            あなたがどう解釈したか、そしてその解釈に基づいて実際に何が起こったかを答えてください。
+            あなたがどう解釈したかを答えてください。
             
-            カオスな結果であるほど面白いです。必ずしも悲劇的である必要はありません。
-            命令をダジャレ(香水→洪水)(雨→飴)(モデルガン→モデル募集の看板が「ガン！」)、聞き間違い(切手を頂戴→切って頂戴)、文脈無視で曲解し、斜め上の結果を出してください。
+            カオスな解釈であればあるほど面白いです。
+            命令をダジャレ(香水→洪水)(雨→飴)(モデルガン→モデル募集の看板が「ガン！」)、聞き間違い(切手を頂戴→切って頂戴)、文脈無視で曲解し、斜め上の解釈を出してください。
             
             ## 出力フォーマット (JSONのみ)
-            { "interpretation": "あなたが理解した内容", "outcome": "起こった現象（50文字程度）" }`;
+            { "interpretation": "あなたが理解した内容" }`;
+        } else if (mode === 'outcome') {
+            // 曲解 + ペルソナ情報を受け取って、その人のキャラに合った現象を生成
+            promptText = `あなたはドラえもんのひみつ道具「ねがい星」です。以下のように願い主の命令を解釈し、実現させることにしました。
+            
+            願い主の情報:
+            - 属性: ${persona.attribute}
+            - 性格: ${persona.personality}
+            
+            あなたが理解した内容: "${interpretation}"
+            
+            この理解に基づいて、願い主のキャラクターと状況を踏まえて、実際に何が起こったかを、具体的で詳細に説明してください。
+            50文字程度で、カオスだが、その人のキャラなりの結果を生み出してください。
+            
+            ## 出力フォーマット (JSONのみ)
+            { "outcome": "起こった現象（50文字程度）" }`;
         } else if (mode === 'reaction') {
             // 結果と本来の願いを比較して、感想と満足度を生成
             promptText = `あなたは願い主です。
