@@ -1,4 +1,3 @@
-// api/wish.js
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -10,8 +9,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'Server Config Error: API Key missing' });
         }
 
-        // ▼▼▼ 修正ポイント：モデル名を「001」付きの正式名称に変更 ▼▼▼
-        const modelName = "gemini-2.5-flash";
+
+        const modelName = "gemini-2.5-flash-lite";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
 
         const { mode, query, persona, interpretation, outcome } = req.body;
@@ -28,7 +27,7 @@ export default async function handler(req, res) {
             ## 出力フォーマット (JSONのみ)
             { "attribute": "属性", "personality": "性格", "true_wish": "願い" }`;
         } else if (mode === 'interpretation') {
-            // ★重要★ 本来の願いは渡さない！クエリのみから曲解させる
+
             promptText = `あなたはドラえもんのひみつ道具「ねがい星」です。願い主の声を聞き間違えたり、言葉を曲解したりする天才です。
             
             願い主の命令: "${query}"
@@ -57,7 +56,6 @@ export default async function handler(req, res) {
             ## 出力フォーマット (JSONのみ)
             { "outcome": "起こった現象（50文字程度）" }`;
         } else if (mode === 'reaction') {
-            // 結果と本来の願いを比較して、感想と満足度を生成
             promptText = `あなたは願い主です。
             
             あなたの情報:
@@ -88,13 +86,12 @@ export default async function handler(req, res) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error("Gemini API Error:", errorText);
-            // 詳細なエラーを返すようにする
+
             return res.status(500).json({ error: "Gemini API Error", details: errorText });
         }
 
         const json = await response.json();
 
-        // 安全にテキストを取り出す
         if (!json.candidates || !json.candidates[0].content) {
             return res.status(500).json({ error: "AI response was empty", raw: json });
         }
@@ -107,5 +104,6 @@ export default async function handler(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
 
 
