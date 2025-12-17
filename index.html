@@ -123,25 +123,25 @@
     <div class="container">
         <div class="star-icon">★</div>
         <h1>AIねがい星</h1>
-        <p>叶えます。でも、勘違いします。</p>
+        <p>星に願い(ただし、そのまま受け取られることはないものとする)を</p>
 
         <div id="game-area">
 
             <div id="persona-card" class="card">
                 <h3>現在の願い主</h3>
                 <div id="persona-loading" class="loading">
-                    次のチャレンジャーを探しています...
+                    次の祈願者を探しています...
                 </div>
                 <div id="persona-content" class="hidden">
                     <p><span class="label">属性</span><span id="p-attr"></span></p>
                     <p><span class="label">性格</span><span id="p-personality"></span></p>
                     <hr style="border-color: #533483; opacity: 0.5;">
-                    <p><span class="label">本来の願い（心の声）</span><span id="p-wish" class="emphasis"></span></p>
+                    <p><span class="label">願い（心の声）</span><span id="p-wish" class="emphasis"></span></p>
                 </div>
             </div>
 
             <div id="input-section" class="hidden">
-                <p>この願いを叶えるための「言葉」を入力してください。<br><small>※ねがい星に伝わるように工夫しましょう</small></p>
+                <p>この願いを叶えるための「言葉」を入力してください。<br><small>※ねがい星は極度の曲解をするので注意</small></p>
                 <input type="text" id="user-query" placeholder="例：美味しいご飯を出して！">
                 <button onclick="makeWish()" id="wish-btn">願いを送信</button>
             </div>
@@ -149,7 +149,7 @@
             <div id="result-card" class="card hidden">
                 <h3>結果</h3>
                 <div id="result-loading" class="loading">
-                    ねがい星が解釈中...<br>（現実をねじ曲げています）
+                    ねがい星が解釈中...<br>
                 </div>
                 <div id="result-content" class="hidden">
                     <p><span class="label">あなたの命令</span><span id="r-query"></span></p>
